@@ -5,6 +5,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jonathon.nebulink.data.local.entity.PuzzleEntity
 import com.jonathon.nebulink.domain.model.GameMode
 import com.jonathon.nebulink.domain.model.PuzzleDifficulty
+import com.jonathon.nebulink.utils.PuzzleGenerator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +27,8 @@ class DatabaseCallback(
         }
     }    private fun populateDatabaseWithSQL(db: SupportSQLiteDatabase) {
         // Clear existing data
-        db.execSQL("DELETE FROM puzzles")        // Insert sample puzzle - use a past date for non-daily puzzles
+        db.execSQL("DELETE FROM puzzles")        // Insert sample puzzle using the puzzle generator
+        val (words, definitions, grid) = PuzzleGenerator.getTestPuzzleData()
         val samplePuzzleInsert = """
             INSERT INTO puzzles (id, themeId, title, description, words, definitions, grid, date, difficulty, gameMode, insight, luxMessage)
             VALUES (
@@ -34,9 +36,9 @@ class DatabaseCallback(
                 'starlight_realm',
                 'Tech Words',
                 'Find technology-related words in this puzzle',
-                'APP,CODE,DATA,WEB',
-                'Software program,Programming instructions,Information,Internet',
-                'C,O,D,E,R,M,K,L,Q,W;X,P,Z,A,A,N,E,T,S,E;F,H,J,K,T,O,U,Y,T,B;G,B,N,M,A,Q,R,E,V,X;L,S,X,Z,P,W,E,R,T,Y;M,Q,W,E,B,T,Y,U,I,O;A,P,P,F,G,H,J,K,L,Z;Q,W,E,R,T,Y,U,I,O,P;Z,X,C,V,B,N,M,L,K,J;D,A,T,A,S,Q,Q,W,E,R',
+                '$words',
+                '$definitions',
+                '$grid',
                 '2025-01-01',
                 'EASY',
                 'NORMAL',
