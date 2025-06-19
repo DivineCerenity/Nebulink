@@ -61,8 +61,7 @@ class GameViewModel @Inject constructor(
     }
 
     fun onEvent(event: GameEvent) {
-        when (event) {
-            is GameEvent.CellSelected -> {
+        when (event) {            is GameEvent.CellSelected -> {
                 val position = event.position
                 // Validate position is within grid bounds
                 val gridSize = state.puzzle?.grid?.size ?: return
@@ -74,20 +73,25 @@ class GameViewModel @Inject constructor(
                     // First cell selected
                     state = state.copy(selectedCells = listOf(position))
                 } else {
-                    // Check if this position continues a valid straight line
-                    val newSelection = state.selectedCells + position
-                    if (isValidSelection(newSelection)) {
-                        state = state.copy(selectedCells = newSelection)
+                    // Don't add the same position twice
+                    if (position in state.selectedCells) {
+                        return
+                    }
+                    
+                    // For continuous selection, we need to build a proper path
+                    val newPath = buildSelectionPath(state.selectedCells.first(), position)
+                    if (newPath.isNotEmpty() && isValidSelection(newPath)) {
+                        state = state.copy(selectedCells = newPath)
                     }
                 }
-            }
-            is GameEvent.SelectionEnded -> {
+            }            is GameEvent.SelectionEnded -> {
                 // Check if the selected word is valid
                 if (state.selectedCells.isNotEmpty()) {
                     val selectedWord = getSelectedWord(state.selectedCells, state.puzzle?.grid ?: emptyList())
                     val puzzleWords = state.puzzle?.words?.map { it.text.uppercase() } ?: emptyList()
                     
                     // Debug logging
+                    println("NEBULINK DEBUG: Selected cells: ${state.selectedCells}")
                     println("NEBULINK DEBUG: Selected word: '$selectedWord'")
                     println("NEBULINK DEBUG: Puzzle words: $puzzleWords")
                     println("NEBULINK DEBUG: Found words: ${state.foundWords}")
@@ -154,6 +158,45 @@ class GameViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun buildSelectionPath(start: Position, end: Position): List<Position> {
+        val path = mutableListOf<Position>()
+        
+        val deltaRow = end.row - start.row
+        val deltaCol = end.col - start.col
+        
+        // Determine if this is a valid straight line
+        val isValidLine = when {
+            deltaRow == 0 -> true // Horizontal
+            deltaCol == 0 -> true // Vertical
+            abs(deltaRow) == abs(deltaCol) -> true // Diagonal
+            else -> false
+        }
+        
+        if (!isValidLine) {
+            return emptyList()
+        }
+        
+        // Calculate step direction
+        val stepRow = when {
+            deltaRow > 0 -> 1
+            deltaRow < 0 -> -1
+            else -> 0
+        }
+        val stepCol = when {
+            deltaCol > 0 -> 1
+            deltaCol < 0 -> -1
+            else -> 0
+        }
+        
+        // Build the path
+        val steps = maxOf(abs(deltaRow), abs(deltaCol))
+        for (i in 0..steps) {
+            path.add(Position(start.row + i * stepRow, start.col + i * stepCol))
+        }
+        
+        return path
     }
 
     private fun isValidSelection(selectedCells: List<Position>): Boolean {

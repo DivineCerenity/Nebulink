@@ -48,22 +48,23 @@ class DatabaseCallback(
         """.trimIndent()
         
         db.execSQL(samplePuzzleInsert)
-          // Insert daily puzzle
+          // Insert daily puzzle        // Insert daily puzzle using the puzzle generator for consistency
+        val (dailyWords, dailyDefinitions, dailyGrid) = PuzzleGenerator.getTestPuzzleData()
         val dailyPuzzleInsert = """
             INSERT INTO puzzles (id, themeId, title, description, words, definitions, grid, date, difficulty, gameMode, insight, luxMessage)
             VALUES (
                 'daily-${LocalDate.now()}',
                 'everdawn',
-                'Nature''s Beauty',
-                'Explore the wonders of nature in today''s puzzle',
-                'NATURE,FOREST,RIVER,MOUNTAIN,WILDLIFE',
-                'The natural world around us,Large area covered with trees,Natural flowing watercourse,Large landform that rises above surrounding land,Animals living in their natural habitat',
-                'N,A,T,U,R,E,F,O,R,E;S,X,P,O,A,A,O,A,A,S;M,O,A,R,A,A,R,A,A,T;O,U,A,E,A,A,E,A,A,A;U,N,T,A,I,N,S,A,A,A;N,T,A,T,A,A,T,A,A,A;T,A,A,A,A,A,A,A,A,A;A,I,W,I,L,D,L,I,F,E;I,N,A,A,A,A,A,A,A,A;N,R,I,V,E,R,A,A,A,A',
+                'Daily Challenge',
+                'Today''s word search challenge',
+                '$dailyWords',
+                '$dailyDefinitions',
+                '$dailyGrid',
                 '${LocalDate.now()}',
                 'NORMAL',
                 'MIRROR',
-                'Nature provides endless inspiration and tranquility.',
-                'Take a moment to appreciate the natural world around you.'
+                'Every day brings new opportunities to learn and grow.',
+                'Take on today''s challenge with confidence!'
             )
         """.trimIndent()
         
