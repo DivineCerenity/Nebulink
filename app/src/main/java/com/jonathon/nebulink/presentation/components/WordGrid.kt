@@ -1,6 +1,7 @@
 package com.jonathon.nebulink.presentation.components
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -108,19 +109,35 @@ fun WordList(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        Text(
+            text = "Words to Find:",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
         words.forEach { word ->
-            AnimatedVisibility(
-                visible = foundWords.contains(word),
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Text(
-                    text = word,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
+            val isFound = foundWords.any { it.uppercase() == word.uppercase() }
+            Text(
+                text = word.uppercase(),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isFound) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                },
+                modifier = Modifier
+                    .padding(vertical = 2.dp)
+                    .animateContentSize()
+            )
         }
+        
+        // Show progress
+        Text(
+            text = "${foundWords.size} / ${words.size} words found",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }

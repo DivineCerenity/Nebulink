@@ -84,9 +84,31 @@ fun GameScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
+                        .padding(paddingValues)                ) {
                     if (theme != null && state.puzzle != null) {
+                        // Game status bar
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Time: ${formatTime(state.timeElapsed)}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            
+                            if (state.isGameComplete) {
+                                Text(
+                                    text = "🎉 Complete!",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        
                         WordGrid(
                             grid = state.puzzle!!.grid,
                             selectedCells = state.selectedCells,

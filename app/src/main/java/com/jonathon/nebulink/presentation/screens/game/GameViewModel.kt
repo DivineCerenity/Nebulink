@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlin.math.abs
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,15 +42,15 @@ class GameViewModel @Inject constructor(
             ) { puzzle, progress, themes ->
                 Triple(puzzle, progress, themes)
             }.collect { (puzzle, progress, themes) ->
-                if (puzzle != null) {
-                    state = state.copy(
+                if (puzzle != null) {                    state = state.copy(
                         puzzle = puzzle,
                         foundWords = progress?.foundWords?.map { it.text } ?: emptyList(),
                         themes = themes,
                         selectedTheme = themes.find { it.id == puzzle.themeId } ?: themes.first(),
                         isLoading = false
                     )
-                    if (progress?.completed != true) {
+                    // Start the timer when puzzle loads
+                    if (puzzle != null && !state.isGameComplete) {
                         startTimer()
                     }
                 } else {
@@ -63,28 +64,43 @@ class GameViewModel @Inject constructor(
         when (event) {
             is GameEvent.CellSelected -> {
                 val position = event.position
+                // Validate position is within grid bounds
+                val gridSize = state.puzzle?.grid?.size ?: return
+                if (position.row !in 0 until gridSize || position.col !in 0 until (state.puzzle?.grid?.get(0)?.size ?: 0)) {
+                    return
+                }
+                
                 if (state.selectedCells.isEmpty()) {
+                    // First cell selected
                     state = state.copy(selectedCells = listOf(position))
                 } else {
-                    val newSelectedCells = state.selectedCells + position
-                    val selectedWord = getSelectedWord(newSelectedCells, state.puzzle?.grid ?: emptyList())
-                    if (selectedWord in (state.puzzle?.words?.map { it.text } ?: emptyList())) {
-                        onWordFound(selectedWord)
+                    // Check if this position continues a valid straight line
+                    val newSelection = state.selectedCells + position
+                    if (isValidSelection(newSelection)) {
+                        state = state.copy(selectedCells = newSelection)
                     }
-                    state = state.copy(selectedCells = newSelectedCells)
                 }
             }
             is GameEvent.SelectionEnded -> {
-                val selectedWord = getSelectedWord(state.selectedCells, state.puzzle?.grid ?: emptyList())
-                if (selectedWord in (state.puzzle?.words?.map { it.text } ?: emptyList())) {
-                    onWordFound(selectedWord)
+                // Check if the selected word is valid
+                if (state.selectedCells.isNotEmpty()) {
+                    val selectedWord = getSelectedWord(state.selectedCells, state.puzzle?.grid ?: emptyList())
+                    val puzzleWords = state.puzzle?.words?.map { it.text.uppercase() } ?: emptyList()
+                    
+                    if (selectedWord.uppercase() in puzzleWords && selectedWord.uppercase() !in state.foundWords.map { it.uppercase() }) {
+                        onWordFound(selectedWord.uppercase())
+                    }
                 }
+                // Clear selection regardless of whether word was found
                 state = state.copy(selectedCells = emptyList())
             }
             is GameEvent.ThemeChanged -> {
                 viewModelScope.launch {
                     state = state.copy(selectedTheme = event.theme)
                 }
+            }
+            is GameEvent.ResetGame -> {
+                resetGame()
             }
         }
     }
@@ -101,14 +117,16 @@ class GameViewModel @Inject constructor(
 
     private fun stopTimer() {
         timerJob?.cancel()
-    }
-
-    private fun onWordFound(word: String) {
-        if (word !in state.foundWords) {
-            val newFoundWords = state.foundWords + word
+    }    private fun onWordFound(word: String) {
+        if (word.uppercase() !in state.foundWords.map { it.uppercase() }) {
+            val newFoundWords = state.foundWords + word.uppercase()
+            val isComplete = newFoundWords.size == (state.puzzle?.words?.size ?: 0)
+            
             state = state.copy(
                 foundWords = newFoundWords,
-                selectedCells = emptyList()
+                selectedCells = emptyList(),
+                lastFoundWord = word.uppercase(),
+                isGameComplete = isComplete
             )
 
             viewModelScope.launch {
@@ -117,17 +135,53 @@ class GameViewModel @Inject constructor(
                         puzzleId = puzzleId,
                         foundWords = newFoundWords.map { Word(text = it) },
                         timeSpent = state.timeElapsed,
-                        completed = newFoundWords.size == (state.puzzle?.words?.size ?: 0),
+                        completed = isComplete,
                         score = calculateScore(newFoundWords.size, state.timeElapsed)
                     )
                 )
 
-                if (newFoundWords.size == (state.puzzle?.words?.size ?: 0)) {
+                if (isComplete) {
                     stopTimer()
                     repository.saveDailyStreak()
                 }
             }
         }
+    }
+
+    private fun isValidSelection(selectedCells: List<Position>): Boolean {
+        if (selectedCells.size < 2) return true
+        
+        val first = selectedCells.first()
+        val last = selectedCells.last()
+        
+        val deltaRow = last.row - first.row
+        val deltaCol = last.col - first.col
+        
+        // Check if it's a straight line (horizontal, vertical, or diagonal)
+        return when {
+            deltaRow == 0 -> selectedCells.all { it.row == first.row } // Horizontal
+            deltaCol == 0 -> selectedCells.all { it.col == first.col } // Vertical
+            abs(deltaRow) == abs(deltaCol) -> {
+                // Diagonal - check each step is consistent
+                val stepRow = if (deltaRow > 0) 1 else if (deltaRow < 0) -1 else 0
+                val stepCol = if (deltaCol > 0) 1 else if (deltaCol < 0) -1 else 0
+                selectedCells.mapIndexed { index, pos ->
+                    pos == Position(first.row + index * stepRow, first.col + index * stepCol)
+                }.all { it }
+            }
+            else -> false
+        }
+    }
+
+    private fun resetGame() {
+        state = state.copy(
+            selectedCells = emptyList(),
+            foundWords = emptyList(),
+            timeElapsed = 0L,
+            isGameComplete = false,
+            lastFoundWord = null
+        )
+        startTimer()
     }
 
     private fun getSelectedWord(
@@ -160,11 +214,13 @@ data class GameState(
     val selectedTheme: Theme? = null,
     val timeElapsed: Long = 0L,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val isGameComplete: Boolean = false
 )
 
 sealed class GameEvent {
     data class CellSelected(val position: Position) : GameEvent()
     object SelectionEnded : GameEvent()
     data class ThemeChanged(val theme: Theme) : GameEvent()
+    object ResetGame : GameEvent()
 }
