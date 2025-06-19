@@ -87,8 +87,16 @@ class GameViewModel @Inject constructor(
                     val selectedWord = getSelectedWord(state.selectedCells, state.puzzle?.grid ?: emptyList())
                     val puzzleWords = state.puzzle?.words?.map { it.text.uppercase() } ?: emptyList()
                     
+                    // Debug logging
+                    println("NEBULINK DEBUG: Selected word: '$selectedWord'")
+                    println("NEBULINK DEBUG: Puzzle words: $puzzleWords")
+                    println("NEBULINK DEBUG: Found words: ${state.foundWords}")
+                    
                     if (selectedWord.uppercase() in puzzleWords && selectedWord.uppercase() !in state.foundWords.map { it.uppercase() }) {
+                        println("NEBULINK DEBUG: Found valid word: $selectedWord")
                         onWordFound(selectedWord.uppercase())
+                    } else {
+                        println("NEBULINK DEBUG: Word not valid or already found")
                     }
                 }
                 // Clear selection regardless of whether word was found

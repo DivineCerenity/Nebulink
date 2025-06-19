@@ -26,8 +26,7 @@ class DatabaseCallback(
         }
     }    private fun populateDatabaseWithSQL(db: SupportSQLiteDatabase) {
         // Clear existing data
-        db.execSQL("DELETE FROM puzzles")
-          // Insert sample puzzle - use a past date for non-daily puzzles
+        db.execSQL("DELETE FROM puzzles")        // Insert sample puzzle - use a past date for non-daily puzzles
         val samplePuzzleInsert = """
             INSERT INTO puzzles (id, themeId, title, description, words, definitions, grid, date, difficulty, gameMode, insight, luxMessage)
             VALUES (
@@ -37,7 +36,7 @@ class DatabaseCallback(
                 'Find technology-related words in this puzzle',
                 'APP,CODE,DATA,WEB',
                 'Software program,Programming instructions,Information,Internet',
-                'A,P,P,D,R,M,K,L,Q,W;C,O,D,E,A,N,I,P,S,E;F,H,J,K,T,O,U,Y,T,B;G,B,N,M,A,Q,R,E,V,X;L,S,X,Z,P,W,E,R,T,Y;M,Q,W,E,R,T,Y,U,I,O;A,S,D,F,G,H,J,K,L,Z;Q,W,E,R,T,Y,U,I,O,P;Z,X,C,V,B,N,M,L,K,J;H,G,F,D,S,A,Q,W,E,R',
+                'C,O,D,E,R,M,K,L,Q,W;X,P,Z,A,A,N,E,T,S,E;F,H,J,K,T,O,U,Y,T,B;G,B,N,M,A,Q,R,E,V,X;L,S,X,Z,P,W,E,R,T,Y;M,Q,W,E,B,T,Y,U,I,O;A,P,P,F,G,H,J,K,L,Z;Q,W,E,R,T,Y,U,I,O,P;Z,X,C,V,B,N,M,L,K,J;D,A,T,A,S,Q,Q,W,E,R',
                 '2025-01-01',
                 'EASY',
                 'NORMAL',
@@ -47,8 +46,7 @@ class DatabaseCallback(
         """.trimIndent()
         
         db.execSQL(samplePuzzleInsert)
-        
-        // Insert daily puzzle
+          // Insert daily puzzle
         val dailyPuzzleInsert = """
             INSERT INTO puzzles (id, themeId, title, description, words, definitions, grid, date, difficulty, gameMode, insight, luxMessage)
             VALUES (
@@ -58,7 +56,7 @@ class DatabaseCallback(
                 'Explore the wonders of nature in today''s puzzle',
                 'NATURE,FOREST,RIVER,MOUNTAIN,WILDLIFE',
                 'The natural world around us,Large area covered with trees,Natural flowing watercourse,Large landform that rises above surrounding land,Animals living in their natural habitat',
-                'A,N,A,T,U,R,E,A,A,A;A,A,A,O,A,A,A,A,A,A;A,A,A,R,A,A,A,A,A,A;A,A,A,E,A,A,A,A,A,A;A,R,I,V,E,R,A,A,A,A;A,A,A,T,A,A,A,A,A,A;A,A,A,A,A,A,A,A,A,A;A,W,I,L,D,L,I,F,E,A;A,A,A,A,A,A,A,A,A,A;A,A,A,A,A,A,A,A,A,A',
+                'N,A,T,U,R,E,F,O,R,E;S,X,P,O,A,A,O,A,A,S;M,O,A,R,A,A,R,A,A,T;O,U,A,E,A,A,E,A,A,A;U,N,T,A,I,N,S,A,A,A;N,T,A,T,A,A,T,A,A,A;T,A,A,A,A,A,A,A,A,A;A,I,W,I,L,D,L,I,F,E;I,N,A,A,A,A,A,A,A,A;N,R,I,V,E,R,A,A,A,A',
                 '${LocalDate.now()}',
                 'NORMAL',
                 'MIRROR',

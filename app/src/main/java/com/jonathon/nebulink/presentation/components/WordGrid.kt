@@ -4,13 +4,15 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jonathon.nebulink.domain.model.GridStyle
 import com.jonathon.nebulink.domain.model.Position
@@ -104,40 +106,123 @@ fun WordList(
     foundWords: List<String>,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Text(
-            text = "Words to Find:",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        words.forEach { word ->
-            val isFound = foundWords.any { it.uppercase() == word.uppercase() }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🔍 Words to Find",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                // Progress indicator
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .padding(4.dp)
+                ) {
+                    CircularProgressIndicator(
+                        progress = { foundWords.size.toFloat() / words.size.toFloat() },
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 3.dp,
+                    )
+                    Text(
+                        text = "${foundWords.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Words grid layout
+            val chunkedWords = words.chunked(2)
+            chunkedWords.forEach { rowWords ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowWords.forEach { word ->
+                        val isFound = foundWords.any { it.uppercase() == word.uppercase() }
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(vertical = 2.dp)
+                                .animateContentSize(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isFound) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                }
+                            ),
+                            border = if (isFound) {
+                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                            } else null
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = word.uppercase(),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isFound) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    },
+                                    fontWeight = if (isFound) FontWeight.Bold else FontWeight.Normal
+                                )
+                                if (isFound) {
+                                    Text(
+                                        text = "✓",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    // Add empty space if odd number of words in row
+                    if (rowWords.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Summary text
             Text(
-                text = word.uppercase(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (isFound) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                },
-                modifier = Modifier
-                    .padding(vertical = 2.dp)
-                    .animateContentSize()
+                text = "${foundWords.size} of ${words.size} words found",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
-        
-        // Show progress
-        Text(
-            text = "${foundWords.size} / ${words.size} words found",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            modifier = Modifier.padding(top = 8.dp)
-        )
     }
 }
