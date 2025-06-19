@@ -27,18 +27,17 @@ class DatabaseCallback(
     }    private fun populateDatabaseWithSQL(db: SupportSQLiteDatabase) {
         // Clear existing data
         db.execSQL("DELETE FROM puzzles")
-        
-        // Insert sample puzzle - use a past date for non-daily puzzles
+          // Insert sample puzzle - use a past date for non-daily puzzles
         val samplePuzzleInsert = """
             INSERT INTO puzzles (id, themeId, title, description, words, definitions, grid, date, difficulty, gameMode, insight, luxMessage)
             VALUES (
                 'sample-puzzle',
                 'starlight_realm',
-                'Tech Basics',
+                'Tech Words',
                 'Find technology-related words in this puzzle',
-                'ANDROID,KOTLIN,COMPOSE,MOBILE,APP',
-                'Google''s mobile operating system,Modern programming language for Android,Declarative UI toolkit for Android,Portable computing device,Software application',
-                'A,N,D,R,O,I,D,A,A,A;A,K,A,A,A,A,A,A,A,A;A,O,A,A,A,A,A,A,A,A;A,T,C,O,M,P,O,S,E,A;A,L,A,A,A,A,A,A,A,A;A,I,A,A,A,A,A,A,A,A;A,N,A,A,A,A,A,A,A,A;A,A,A,A,A,A,A,A,A,A;A,A,A,A,A,A,A,A,A,A;A,A,A,A,A,A,A,A,A,P',
+                'APP,CODE,DATA,WEB',
+                'Software program,Programming instructions,Information,Internet',
+                'A,P,P,D,R,M,K,L,Q,W;C,O,D,E,A,N,I,P,S,E;F,H,J,K,T,O,U,Y,T,B;G,B,N,M,A,Q,R,E,V,X;L,S,X,Z,P,W,E,R,T,Y;M,Q,W,E,R,T,Y,U,I,O;A,S,D,F,G,H,J,K,L,Z;Q,W,E,R,T,Y,U,I,O,P;Z,X,C,V,B,N,M,L,K,J;H,G,F,D,S,A,Q,W,E,R',
                 '2025-01-01',
                 'EASY',
                 'NORMAL',
